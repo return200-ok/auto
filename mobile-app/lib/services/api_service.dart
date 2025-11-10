@@ -81,7 +81,7 @@ class ApiService {
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data
-          .map((json) => Part.fromJson(json['part']))
+          .map((json) => Part.fromJson(json['part'] ?? json))
           .toList();
     }
     throw Exception('Failed to load parts');

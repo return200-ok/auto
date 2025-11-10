@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../providers/part_provider.dart';
 
 class PartDetailsScreen extends StatelessWidget {
@@ -19,198 +20,272 @@ class PartDetailsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Part Details'),
+        elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image
-            if (part.imageUrl != null)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  part.imageUrl!,
-                  width: double.infinity,
-                  height: 250,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    width: double.infinity,
-                    height: 250,
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.image_not_supported, size: 64),
+            // Hero Image
+            _HeroImage(imageUrl: part.imageUrl),
+            
+            // Content
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Part Name
+                  Text(
+                    part.name,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                ),
-              )
-            else
-              Container(
-                width: double.infinity,
-                height: 250,
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.image_not_supported, size: 64),
-              ),
-            const SizedBox(height: 20),
-            
-            // Part Name
-            Text(
-              part.name,
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            
-            // Brand and Part Numbers Card
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (part.brand != null) ...[
-                      Row(
-                        children: [
-                          const Text(
-                            'Brand: ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Text(
-                            part.brand!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                      const Divider(),
+                  
+                  const SizedBox(height: 16),
+                  
+                  // Brand and Part Numbers Card
+                  _InfoCard(
+                    children: [
+                      if (part.brand != null)
+                        _InfoRow(
+                          icon: Icons.branding_watermark,
+                          label: 'Brand',
+                          value: part.brand!,
+                        ),
+                      if (part.brand != null && (part.oemNumber != null || part.aftermarketNumber != null))
+                        const Divider(height: 24),
+                      if (part.oemNumber != null)
+                        _InfoRow(
+                          icon: Icons.tag,
+                          label: 'OEM Number',
+                          value: part.oemNumber!,
+                          isMonospace: true,
+                        ),
+                      if (part.oemNumber != null && part.aftermarketNumber != null)
+                        const SizedBox(height: 12),
+                      if (part.aftermarketNumber != null)
+                        _InfoRow(
+                          icon: Icons.tag_outlined,
+                          label: 'Aftermarket Number',
+                          value: part.aftermarketNumber!,
+                          isMonospace: true,
+                        ),
                     ],
-                    if (part.oemNumber != null) ...[
-                      Row(
-                        children: [
-                          const Text(
-                            'OEM Number: ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              part.oemNumber!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                    ],
-                    if (part.aftermarketNumber != null) ...[
-                      Row(
-                        children: [
-                          const Text(
-                            'Aftermarket: ',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              part.aftermarketNumber!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontFamily: 'monospace',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            
-            // Description
-            if (part.description != null) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Description',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    part.description!,
-                    style: const TextStyle(fontSize: 16, height: 1.5),
                   ),
-                ),
-              ),
-            ],
-            
-            // Specifications
-            if (part.specs != null && part.specs!.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              const Text(
-                'Specifications',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: part.specs!.entries.map(
-                      (entry) => Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                entry.key.replaceAll('_', ' ').toUpperCase(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
+                  
+                  // Description
+                  if (part.description != null) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      'Description',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          part.description!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                height: 1.6,
                               ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                entry.value.toString(),
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  ],
+                  
+                  // Specifications
+                  if (part.specs != null && part.specs!.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      'Specifications',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: part.specs!.entries.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 2,
+                                    child: Text(
+                                      _formatKey(entry.key),
+                                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: Colors.grey[700],
+                                          ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Text(
+                                      entry.value.toString(),
+                                      style: Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                  
+                  const SizedBox(height: 32),
+                ],
               ),
-            ],
-            const SizedBox(height: 32),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  String _formatKey(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((word) => word.isEmpty
+            ? word
+            : word[0].toUpperCase() + word.substring(1))
+        .join(' ');
+  }
+}
+
+class _HeroImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _HeroImage({this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: 280,
+      color: Colors.grey[100],
+      child: imageUrl != null
+          ? CachedNetworkImage(
+              imageUrl: imageUrl!,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                color: Colors.grey[200],
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                color: Colors.grey[200],
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_not_supported,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Image not available',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          : Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.image_not_supported,
+                  size: 64,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'No image available',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final List<Widget> children;
+
+  const _InfoCard({required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: children,
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isMonospace;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.isMonospace = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontFamily: isMonospace ? 'monospace' : null,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

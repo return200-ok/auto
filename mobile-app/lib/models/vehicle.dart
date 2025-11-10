@@ -38,5 +38,6 @@ class Vehicle {
   }
 
   String get displayName => '$make $model ($year)';
+  String get fullName => '$make $model $year${trim != null ? ' $trim' : ''}';
 }
 

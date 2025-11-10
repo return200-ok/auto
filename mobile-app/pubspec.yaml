@@ -1,5 +1,5 @@
 name: auto_parts_mobile
-description: Mobile app for Auto Parts Catalog
+description: Mobile app for Auto Parts Catalog - Beautiful and modern UI
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -15,6 +15,10 @@ dependencies:
   shared_preferences: ^2.2.0
   cached_network_image: ^3.3.0
   flutter_svg: ^2.0.0
+  shimmer: ^3.0.0
+  google_fonts: ^6.1.0
+  flutter_staggered_animations: ^1.1.1
+  pull_to_refresh: ^2.0.0
 
 dev_dependencies:
   flutter_test:
